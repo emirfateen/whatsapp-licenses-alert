@@ -6,10 +6,16 @@ services:
     container_name: license_alert_bot
     restart: unless-stopped
     volumes:
-      - .:/app
-      - /app/node_modules
-      - ./session:/app/.wwebjs_auth
+      - ./src:/app/src            # Source code
+      - ./session:/app/src/.wwebjs_auth  # Session WhatsApp (persistent)
+      - ./qr:/app/qr          # QR code
+      - ./licenses:/app/licenses  # License files
     environment:
       - TZ=Asia/Jakarta
     env_file:
       - .env
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 512M

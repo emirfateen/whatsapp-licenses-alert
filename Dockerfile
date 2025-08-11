@@ -23,18 +23,16 @@ RUN apt-get update && apt-get install -y \
     libu2f-udev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Set workdir
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Install dependencies
 COPY package*.json ./
 RUN npm install --omit=dev
 
-# Copy the full bot source code
+# Copy source
 COPY ./src ./src
 
-# Puppeteer expects this env
+# Puppeteer config
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
-# Default start command
 CMD ["npm", "start"]

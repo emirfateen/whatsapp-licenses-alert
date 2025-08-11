@@ -5,42 +5,49 @@ const csv = require('csv-parser');
 const path = require('path');
 const qrcode = require('qrcode');
 
-// Pastikan path .env absolut dari lokasi skrip ini
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-// Ambil nilai env dengan fallback
 const GROUP_NAME = process.env.GROUP_NAME;
 const LICENSE_DIR = path.resolve(__dirname, process.env.DATA_FILE || '../licenses');
-const INTERVAL_MINUTES = parseInt(process.env.INTERVAL_MINUTES || '60');
+const INTERVAL_MINUTES = Math.max(5, parseInt(process.env.INTERVAL_MINUTES || '60')); // minimal 5 menit
 
-// Set path otentikasi agar selalu di lokasi yang sama dengan file ini
+// Client dengan session tersimpan
 const client = new Client({
     authStrategy: new LocalAuth({
         dataPath: path.join(__dirname, '.wwebjs_auth')
     }),
     puppeteer: {
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-zygote",
-      "--disable-gpu",
-      "--window-size=1280,800",
-    ],
-  },
+        headless: true,
+        args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-accelerated-2d-canvas",
+            "--disable-extensions",
+            "--disable-gpu",
+            "--no-zygote",
+            "--single-process",
+            "--window-size=1280,800",
+            "--disable-background-timer-throttling",
+            "--disable-backgrounding-occluded-windows",
+            "--disable-renderer-backgrounding"
+        ],
+    }
 });
 
+let qrGenerated = false;
 client.on('qr', (qr) => {
-    console.log('🟡 QR code disimpan ke qr.png, silakan buka file tersebut untuk scan.');
-    qrcode.toFile('./qr.png', qr, { width: 300 }, (err) => {
-        if (err) console.error(err);
-    });
+    if (!qrGenerated) {
+        console.log('🟡 QR code disimpan ke qr.png (scan sekali saja, session akan tersimpan)');
+        qrcode.toFile('/app/qr/qr.png', qr, { width: 250 }, (err) => {
+            if (err) console.error(err);
+        });
+        qrGenerated = true;
+    }
 });
 
 client.on('ready', async () => {
-    console.log('✅ WhatsApp bot standby dan siap memantau...');
+    console.log('✅ WhatsApp bot standby...');
 
     const chats = await client.getChats();
     const group = chats.find(c => c.isGroup && c.name === GROUP_NAME);
@@ -51,20 +58,24 @@ client.on('ready', async () => {
     }
 
     const runCheck = async () => {
-        const today = new Date();
-        const licenses = await loadAllLicenses(LICENSE_DIR);
-        const expiring = getExpiringLicenses(licenses, today);
+        try {
+            const today = new Date();
+            const licenses = await loadAllLicenses(LICENSE_DIR);
+            const expiring = getExpiringLicenses(licenses, today);
 
-        if (expiring.length === 0) {
-            console.log(`[${today.toISOString()}] ✅ Tidak ada license yang mendekati expired.`);
-        } else {
-            for (const entry of expiring) {
-                const expDate = new Date(entry.expired_date);
-                const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-                const msg = buildMessage(entry, daysLeft);
-                await client.sendMessage(group.id._serialized, msg);
-                console.log(`📨 Alert terkirim untuk: ${entry.nama_bank}`);
+            if (expiring.length === 0) {
+                console.log(`[${today.toISOString()}] ✅ Tidak ada license expired.`);
+            } else {
+                for (const entry of expiring) {
+                    const expDate = new Date(entry.expired_date);
+                    const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+                    const msg = buildMessage(entry, daysLeft);
+                    await client.sendMessage(group.id._serialized, msg);
+                    console.log(`📨 Alert terkirim untuk: ${entry.nama_bank}`);
+                }
             }
+        } catch (err) {
+            console.error(`⚠️ Error saat cek license: ${err.message}`);
         }
     };
 
@@ -85,8 +96,6 @@ function getExpiringLicenses(data, today) {
         const expDate = new Date(exp.toISOString().split('T')[0]);
 
         const diff = Math.ceil((expDate - todayDate) / (1000 * 60 * 60 * 24));
-
-        console.log(`🔍 Cek: ${entry.nama_bank} - Expired: ${entry.expired_date} - H-${diff}`);
 
         return targetDays.includes(diff);
     });
@@ -115,7 +124,7 @@ async function loadAllLicenses(dirPath) {
                     allLicenses.push(data);
                 }
             } catch (err) {
-                console.warn(`⚠️ Gagal memuat file ${file}:`, err.message);
+                console.warn(`⚠️ Gagal memuat file ${file}: ${err.message}`);
             }
         }
     }
