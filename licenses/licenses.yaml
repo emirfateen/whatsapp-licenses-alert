@@ -1,0 +1,14 @@
+- nama_bank: Bank ABC
+  license: ISO27001
+  expired_date: 2025-09-07
+  last_license: 2025-05-01
+
+- nama_bank: Bank Sungkar
+  license: ISO28001
+  expired_date: 2025-09-07
+  last_license: 2025-05-01
+
+- nama_bank: Bank XYZ
+  license: ISO29001
+  expired_date: 2025-09-10
+  last_license: 2025-05-01
