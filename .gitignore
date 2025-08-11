@@ -3,3 +3,4 @@ src/.wwebjs_auth/
 .wwebjs_auth/
 .wwebjs_cache/
 session/
+.env
