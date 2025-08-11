@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  license_bot:
+    build: .
+    container_name: license_alert_bot
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./session:/app/.wwebjs_auth
+    environment:
+      - TZ=Asia/Jakarta
+    env_file:
+      - .env

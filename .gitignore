@@ -1,0 +1,7 @@
+node_modules/
+src/.wwebjs_auth/
+.wwebjs_auth/
+.wwebjs_cache/
+licenses/licenses.yaml
+session/
+.env
