@@ -128,7 +128,10 @@ async function loadAllLicenses(dirPath) {
             }
         }
     }
-
+    if (process.env.SHEET_ID && process.env.SHEET_RANGE) {
+        const sheetData = await loadFromGoogleSheets(process.env.SHEET_ID, process.env.SHEET_RANGE);
+        allLicenses.push(...sheetData);
+    }
     return allLicenses;
 }
 
