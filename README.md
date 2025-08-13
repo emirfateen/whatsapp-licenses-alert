@@ -3,6 +3,21 @@
 Bot ini digunakan untuk mengirim alert otomatis ke grup WhatsApp jika ada lisensi yang akan habis masa berlakunya pada H-90, H-60, atau H-30 hari.
 Sumber data lisensi bisa berasal dari file CSV, YAML
 
+## Struktur Folder
+```
+project-root/
+├── src/
+│   ├── index.js                # Script utama bot
+│   └── .wwebjs_auth/           # Folder session WhatsApp (terbentuk otomatis)
+├── licenses/                   # Folder data lisensi (CSV/YAML)
+│   ├── contoh.csv
+│   └── contoh.yaml
+├── qr/                         # Folder untuk menyimpan QR code
+├── .env                        # Konfigurasi environment
+├── package.json
+└── README.md
+```
+
 ## ⚙️ Instalasi
 ```
 # Clone repository
@@ -16,7 +31,7 @@ npm install
 ## 📝 Konfigurasi .env
 Ubah file ```.env.template``` menjadi ```.env``` lalu modifikasi sesuai dengan konfigurasi grup dan yang lainnya. 
 
-## 📊 Format Data Lisensi
+## 📊 Data Lisensi
 Untuk mempermudah, diharapkan untuk mengikuti format data sebagai yang diberikan. Apabila ingin mengganti formatnya, maka diharuskan untuk mengganti juga di bagian ```index.js```.
 
 ### CSV
